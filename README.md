@@ -1,3 +1,5 @@
-Este proyecto es con autenticacion JWT
+Este proyecto es con autenticacion JWT(En Desarrollo)
 
-Y consumido por un cliente en React
+Consumido por un cliente en React en un entorno AC/CD 
+Se usara Yenkins,Sonarcube  
+
