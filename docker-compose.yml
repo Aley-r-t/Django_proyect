@@ -1,15 +1,15 @@
-version: 3
+version: '3'
 
 services:
   sonarqube:
-    image: sonarqube:comunity
+    image: sonarqube:community
     depends_on:
       - db
-    enviroment:
+    environment:
       SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
-      SONAR_SEARCH_JAVAADITIONALOPTS: "-Dnode.store.allow_mmap=false,-Ddiscovery.type=single-node"
+      SONAR_SEARCH_JAVAADDITIONALOPTS: "-Dnode.store.allow_mmap=false -Ddiscovery.type=single-node"
     volumes:
       - sonarqube_data:/opt/sonarqube/data
       - sonarqube_extensions:/opt/sonarqube/extensions
@@ -18,18 +18,15 @@ services:
       - "9000:9000"
   db:
     image: postgres:12
-    enviroment:
+    environment:
       POSTGRES_USER: sonar
       POSTGRES_PASSWORD: sonar
     volumes:
-      - sonarqube_data:/opt/sonarqube/data
-      - sonarqube_extensions:/opt/sonarqube/extensions
-      - sonarqube_logs:/opt/sonarqube/logs
+      - postgresql_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 volumes:
   sonarqube_data: 
   sonarqube_extensions:
   sonarqube_logs:
-  postgresql:
   postgresql_data:
