@@ -1,12 +1,13 @@
-name: CI Pipeline Local with Docker
+name: CI Pipeline Local
 
 on:
   push:
     branches:
+      - main
       - develop
 
 env:
-  LOCAL_SONARQUBE_URL: http://localhost:9000 # URL local de SonarQube
+  LOCAL_SONARQUBE_URL: http://localhost:9000
 
 jobs:
   local-analysis:
@@ -14,84 +15,95 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Iniciar contenedor Docker de SonarQube
-    - name: Start SonarQube Docker Container
-      run: |
-        docker run -d --name sonarqube -p 9000:9000 sonarqube:latest
+      # 1. Checkout del código
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    # 2. Esperar a que SonarQube esté listo
-    - name: Wait for SonarQube to be Ready
-      run: |
-        for i in {1..30}; do
-          if curl -s ${{ env.LOCAL_SONARQUBE_URL }} >/dev/null; then
-            echo "SonarQube is up!"
-            break
-          fi
-          echo "Waiting for SonarQube..."
-          sleep 10
-        done
+      # 2. Iniciar contenedor Docker de SonarQube
+      - name: Start SonarQube Docker Container
+        run: |
+          docker run -d --name sonarqube -p 9000:9000 sonarqube:latest
 
-    # 3. Checkout del código
-    - name: Checkout code
-      uses: actions/checkout@v3
+      # 3. Esperar a que SonarQube esté listo
+      - name: Wait for SonarQube to be Ready
+        run: |
+          for i in {1..30}; do
+            if curl -s ${{ env.LOCAL_SONARQUBE_URL }} >/dev/null; then
+              echo "SonarQube is up!"
+              break
+            fi
+            echo "Waiting for SonarQube..."
+            sleep 10
+          done
 
-    # 4. Construir imagen Docker del backend
-    - name: Build Backend Docker Image
-      run: |
-        cd lab14
-        docker build -t backend-app:latest .
+      # 4. Configurar Python (para Django)
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12.3'
 
-    # 5. Construir imagen Docker del frontend
-    - name: Build Frontend Docker Image
-      run: |
-        cd client
-        docker build -t frontend-app:latest .
+      # 5. Instalar dependencias del backend (Django)
+      - name: Install Backend Dependencies
+        run: |
+          cd lab14
+          pip install -r requirements.txt
 
-    # 6. Ejecutar contenedor del backend
-    - name: Run Backend Container
-      run: |
-        docker run -d --name backend-container backend-app:latest
+      # 6. Ejecutar migraciones
+      - name: Run Migrations
+        run: |
+          cd lab14
+          python manage.py migrate
 
-    # 7. Ejecutar contenedor del frontend
-    - name: Run Frontend Container
-      run: |
-        docker run -d --name frontend-container frontend-app:latest
+      # 7. Ejecutar pruebas del backend
+      - name: Run Backend Tests
+        run: |
+          cd lab14
+          python manage.py test
 
-    # 8. Ejecutar pruebas del backend dentro del contenedor
-    - name: Run Backend Tests in Container
-      run: |
-        docker exec backend-container python manage.py test
+      # 8. Configurar Node.js (para el frontend)
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
 
-    # 9. Ejecutar pruebas del frontend dentro del contenedor (si aplica)
-    - name: Run Frontend Tests in Container
-      run: |
-        docker exec frontend-container npm test
+      # 9. Instalar dependencias del frontend
+      - name: Install Frontend Dependencies
+        run: |
+          cd client
+          npm install
 
-    # 10. Análisis de SonarQube para backend
-    - name: SonarQube Analysis for Backend
-      uses: sonarsource/sonarqube-scan-action@v1
-      with:
-        projectBaseDir: lab14
-      env:
-        SONAR_HOST_URL: ${{ env.LOCAL_SONARQUBE_URL }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      # 10. Construir el frontend
+      - name: Build Frontend
+        run: |
+          cd client
+          npm run build
 
-    # 11. Análisis de SonarQube para frontend
-    - name: SonarQube Analysis for Frontend
-      uses: sonarsource/sonarqube-scan-action@v1
-      with:
-        projectBaseDir: client
-      env:
-        SONAR_HOST_URL: ${{ env.LOCAL_SONARQUBE_URL }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      # 11. Ejecutar pruebas del frontend (si las tienes)
+      - name: Run Frontend Tests
+        run: |
+          cd client
+          npm test
 
-    # 12. Detener y eliminar los contenedores
-    - name: Stop and Remove Containers
-      run: |
-        docker stop backend-container frontend-container sonarqube
-        docker rm backend-container frontend-container sonarqube
+      # 12. Análisis de SonarQube para backend
+      - name: SonarQube Analysis for Backend
+        uses: sonarsource/sonarqube-scan-action@v1
+        with:
+          projectBaseDir: lab14
+        env:
+          SONAR_HOST_URL: ${{ env.LOCAL_SONARQUBE_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-    # 13. Eliminar las imágenes Docker
-    - name: Remove Docker Images
-      run: |
-        docker rmi backend-app:latest frontend-app:latest
+      # 13. Análisis de SonarQube para frontend
+      - name: SonarQube Analysis for Frontend
+        uses: sonarsource/sonarqube-scan-action@v1
+        with:
+          projectBaseDir: client
+        env:
+          SONAR_HOST_URL: ${{ env.LOCAL_SONARQUBE_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      # 14. Apagar y eliminar el contenedor de SonarQube
+      - name: Stop and Remove SonarQube Docker Container
+        run: |
+          docker stop sonarqube
+          docker rm sonarqube
