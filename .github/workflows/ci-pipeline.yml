@@ -7,7 +7,7 @@ on:
       - develop
 
 env:
-  LOCAL_SONARQUBE_URL: http://localhost:9000
+  LOCAL_SONARQUBE_URL: http://18.188.57.9:9000
 
 jobs:
   local-analysis:
