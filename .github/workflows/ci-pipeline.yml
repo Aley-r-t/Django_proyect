@@ -1,4 +1,4 @@
-name: CI Pipeline Local
+name: CI Pipeline AWS SonarQube
 
 on:
   push:
@@ -6,104 +6,74 @@ on:
       - main
       - develop
 
-env:
-  LOCAL_SONARQUBE_URL: http://18.188.57.9:9000
-
 jobs:
-  local-analysis:
-    name: Local Analysis with Docker SonarQube
-    runs-on: ubuntu-latest
+  aws-analysis:
+    name: Analysis with AWS SonarQube
+    runs-on: self-hosted  # Utiliza el runner auto-hospedado
 
     steps:
       # 1. Checkout del código
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Iniciar contenedor Docker de SonarQube
-      - name: Start SonarQube Docker Container
-        run: |
-          docker run -d --name sonarqube -p 9000:9000 sonarqube:latest
-
-      # 3. Esperar a que SonarQube esté listo
-      - name: Wait for SonarQube to be Ready
-        run: |
-          for i in {1..30}; do
-            if curl -s ${{ env.LOCAL_SONARQUBE_URL }} >/dev/null; then
-              echo "SonarQube is up!"
-              break
-            fi
-            echo "Waiting for SonarQube..."
-            sleep 10
-          done
-
-      # 4. Configurar Python (para Django)
+      # 2. Configurar Python (para Django)
       - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.12.3'
+        run: |
+          sudo alternatives --set python3 /usr/bin/python3.8
+          sudo alternatives --set pip3 /usr/bin/pip3.8
+          python3 --version
+          pip3 --version
 
-      # 5. Instalar dependencias del backend (Django)
+      # 3. Instalar dependencias del backend (Django)
       - name: Install Backend Dependencies
         run: |
           cd lab14
-          pip install -r requirements.txt
+          pip3 install -r requirements.txt
 
-      # 6. Ejecutar migraciones
+      # 4. Ejecutar migraciones
       - name: Run Migrations
         run: |
           cd lab14
-          python manage.py migrate
+          python3 manage.py migrate
 
-      # 7. Ejecutar pruebas del backend
+      # 5. Ejecutar pruebas del backend
       - name: Run Backend Tests
         run: |
           cd lab14
-          python manage.py test
+          python3 manage.py test
 
-      # 8. Configurar Node.js (para el frontend)
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-
-      # 9. Instalar dependencias del frontend
+      # 6. Instalar dependencias del frontend
       - name: Install Frontend Dependencies
         run: |
           cd client
           npm install
 
-      # 10. Construir el frontend
+      # 7. Construir el frontend
       - name: Build Frontend
         run: |
           cd client
           npm run build
 
-      # 11. Ejecutar pruebas del frontend (si las tienes)
+      # 8. Ejecutar pruebas del frontend (si las tienes)
       - name: Run Frontend Tests
         run: |
           cd client
-          npm run 
+          npm run test
 
-      # 12. Análisis de SonarQube para backend
+      # 9. Análisis de SonarQube para backend
       - name: SonarQube Analysis for Backend
         uses: sonarsource/sonarqube-scan-action@v1
         with:
           projectBaseDir: lab14
         env:
-          SONAR_HOST_URL: ${{ env.LOCAL_SONARQUBE_URL }}
+          SONAR_HOST_URL: http://localhost:9000
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      # 13. Análisis de SonarQube para frontend
+      # 10. Análisis de SonarQube para frontend
       - name: SonarQube Analysis for Frontend
         uses: sonarsource/sonarqube-scan-action@v1
         with:
           projectBaseDir: client
         env:
-          SONAR_HOST_URL: ${{ env.LOCAL_SONARQUBE_URL }}
+          SONAR_HOST_URL: http://localhost:9000
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-      # 14. Apagar y eliminar el contenedor de SonarQube
-      - name: Stop and Remove SonarQube Docker Container
-        run: |
-          docker stop sonarqube
-          docker rm sonarqube
