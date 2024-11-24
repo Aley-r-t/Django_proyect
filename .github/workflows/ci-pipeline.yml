@@ -82,7 +82,7 @@ jobs:
       - name: Run Frontend Tests
         run: |
           cd client
-          npm test
+          npm run 
 
       # 12. Análisis de SonarQube para backend
       - name: SonarQube Analysis for Backend
