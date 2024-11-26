@@ -72,6 +72,15 @@ TEMPLATES = [
     },
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
 WSGI_APPLICATION = 'lab14.wsgi.application'
 
 
@@ -80,8 +89,13 @@ WSGI_APPLICATION = 'lab14.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'lab14_sgc',
+        'ENCODEDING': 'utf8',
+        'USER': 'postgres',
+        'PASSWORD': 'CONTRASEÑA-DEL-USUARIO',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
