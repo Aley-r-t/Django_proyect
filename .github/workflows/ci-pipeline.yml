@@ -20,7 +20,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12.3'  # Ajusta la versión según tus necesidades
+          python-version: '3.12.6'  # Ajusta la versión según tus necesidades
 
       # 3. Instalar dependencias del backend (Django)
       - name: Install Backend Dependencies
