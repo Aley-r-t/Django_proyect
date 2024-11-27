@@ -1,5 +1,5 @@
 """
-ASGI config for lab14 project.
+ASGI config for lab14_sgc project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lab14.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lab14_sgc.settings')
 
 application = get_asgi_application()
