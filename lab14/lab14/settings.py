@@ -77,7 +77,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ),
 }
 
@@ -93,7 +93,7 @@ DATABASES = {
         'NAME': 'lab14_sgc',
         'ENCODEDING': 'utf8',
         'USER': 'postgres',
-        'PASSWORD': 'CONTRASEÑA-DEL-USUARIO',
+        'PASSWORD': 'andres',
         'HOST': 'localhost',
         'PORT': '5432',
     }
