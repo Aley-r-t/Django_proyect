@@ -9,3 +9,5 @@ djangorestframework-simplejwt>=5.3.1
 
 # para la coneccion postgresql
 psycopg2>=2.9.10
+
+psycopg>=3.2.3
